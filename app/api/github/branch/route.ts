@@ -1,0 +1,3 @@
+import {NextRequest,NextResponse} from 'next/server';
+import {github,githubJson} from '@/lib/github';
+export async function POST(req:NextRequest){try{const {owner,repo,branch,base='main'}=await req.json();const ref=await githubJson<any>(`/repos/${owner}/${repo}/git/ref/heads/${encodeURIComponent(base)}`);const r=await github(`/repos/${owner}/${repo}/git/refs`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ref:`refs/heads/${branch}`,sha:ref.object.sha})});if(!r.ok)return NextResponse.json({error:await r.text()},{status:r.status});return NextResponse.json(await r.json())}catch(e){return NextResponse.json({error:String(e)},{status:500})}}
