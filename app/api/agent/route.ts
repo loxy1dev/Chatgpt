@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { githubJson } from '@/lib/github';
 
-const client = new OpenAI({apiKey:process.env.OPENAI_API_KEY});
-
 export async function POST(req:NextRequest){
  const {owner,repo,branch='main',prompt}=await req.json();
  if(!owner||!repo||!prompt) return NextResponse.json({error:'owner, repo and prompt are required'},{status:400});
+ const apiKey=process.env.OPENAI_API_KEY;
+ if(!apiKey) return NextResponse.json({error:'OPENAI_API_KEY is not configured on the server.'},{status:500});
  try{
+  const client=new OpenAI({apiKey});
   const tree=await githubJson<any>(`/repos/${owner}/${repo}/git/trees/${encodeURIComponent(branch)}?recursive=1`);
   const files=(tree.tree||[]).filter((x:any)=>x.type==='blob' && !/node_modules|\.next|\.git\//.test(x.path)).slice(0,40);
   const contents:any[]=[];
